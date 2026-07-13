@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#080808">
+<title>Deehan Training — Week by Week</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --red:#8B1A1A; --redL:#c97070; --redBg:#1a0d0d;
+    --navy:#1F3864; --navyL:#7090c9; --navyBg:#0d1320;
+    --trav:#6d28d9; --travL:#a78bfa; --travBg:#160d24;
+    --green:#16a34a; --greenL:#4ade80; --greenBg:#0a1f14;
+    --bg:#080808; --card:#0f0f0f; --line:#2a2a2a;
+    --txt:#f0f0f0; --dim:#a8a8a8; --dimmer:#8a8a8a;
+    --mono:'Courier New',monospace;
+  }
+  body { background:var(--bg); color:var(--txt); font-family:'Georgia',serif; padding-bottom:78px; min-height:100vh; }
+  .wrap { max-width:580px; margin:0 auto; padding:1rem; }
+
+  .hero { padding:1.4rem 1rem 1rem; border-bottom:1px solid var(--line); }
+  .hero .name { font-size:10px; color:var(--dim); letter-spacing:0.18em; text-transform:uppercase; font-family:var(--mono); margin-bottom:4px; }
+  .hero h1 { font-size:26px; font-weight:700; color:#fff; letter-spacing:-0.02em; }
+  .hero h1 span { color:var(--red); }
+  .hero .sub { font-size:12px; color:var(--dim); font-family:var(--mono); margin-top:4px; }
+
+  /* Week navigation */
+  .weeknav { display:flex; align-items:center; gap:10px; margin-bottom:1rem; }
+  .weeknav button {
+    background:var(--card); border:1px solid var(--line); color:#e0e0e0;
+    border-radius:8px; padding:10px 16px; font-size:18px; cursor:pointer;
+    font-family:var(--mono); line-height:1;
+  }
+  .weeknav button:active { background:#1a1a1a; }
+  .weeknav .wkinfo { flex:1; text-align:center; }
+  .weeknav .wknum { font-size:18px; font-weight:700; color:#fff; }
+  .weeknav .wkmeta { font-size:11px; color:var(--dim); font-family:var(--mono); margin-top:2px; }
+
+  .weekpicker { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:1rem; justify-content:center; }
+  .wkdot {
+    width:30px; height:30px; border-radius:6px; border:1px solid var(--line);
+    background:var(--card); color:#c0c0c0; font-size:11px; font-family:var(--mono);
+    cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700;
+  }
+  .wkdot.str.on { background:var(--red); color:#fff; border-color:var(--red); }
+  .wkdot.hyp.on { background:var(--navy); color:#fff; border-color:var(--navy); }
+  .wkdot.trav.on { background:var(--trav); color:#fff; border-color:var(--trav); }
+  .wkdot.trav { border-color:#3a2560; color:var(--travL); }
+  .wkdot.thisweek { box-shadow:0 0 0 1.5px var(--redL); }
+  .wkdot.logged::after { content:'·'; position:absolute; margin-top:-18px; margin-left:0; color:var(--greenL); font-size:20px; }
+
+  /* Phase banner */
+  .pbanner { border-radius:8px; padding:0.7rem 1rem; margin-bottom:1rem; font-size:12px; line-height:1.5; }
+  .pbanner.str { background:var(--redBg); border-left:3px solid var(--red); color:#d8b0b0; }
+  .pbanner.hyp { background:var(--navyBg); border-left:3px solid var(--navy); color:#aac0e0; }
+  .pbanner.trav { background:var(--travBg); border-left:3px solid var(--trav); color:#c4b0e0; }
+  .pbanner b { color:#fff; }
+  .pbanner .focus { font-family:var(--mono); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; font-size:11px; }
+
+  .weeknote { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:0.7rem 1rem; margin-bottom:1rem; font-size:12px; color:var(--redL); font-style:italic; line-height:1.5; }
+  .weeknote.trav { color:var(--travL); }
+
+  /* Day tabs with dates */
+  .daytab .dtl { display:block; }
+  .daytab .dtd { display:block; font-size:9px; opacity:0.55; font-weight:400; margin-top:1px; }
+  .daytab.travday { border-color:#3a2560; }
+  .daytab.offday { opacity:0.45; border-style:dashed; }
+  .daytab.istoday { box-shadow:inset 0 0 0 1.5px var(--redL); }
+  .daytab.istoday.on { box-shadow:none; }
+  .todaybtn { width:100%; padding:9px; margin:-6px 0 12px; border-radius:8px; border:1px solid var(--red); background:var(--redBg); color:var(--redL); font-family:var(--mono); font-size:12px; font-weight:700; cursor:pointer; letter-spacing:0.04em; }
+  .todaybtn:active { background:var(--red); color:#fff; }
+
+  /* Selected day date header */
+  .datehead { text-align:center; font-size:13px; font-weight:700; color:var(--redL); font-family:var(--mono); letter-spacing:0.06em; margin:-4px 0 10px; }
+
+  /* Off day */
+  .pbanner.off { background:#1a1a1a; border-left:3px solid #777; color:#c0c0c0; }
+  .shead.off { background:linear-gradient(135deg,#2a2a2a,#1a1a1a); }
+
+  /* Day tabs */
+  .daytabs { display:flex; gap:5px; margin-bottom:1rem; flex-wrap:wrap; }
+  .daytab {
+    flex:1; min-width:60px; padding:9px 4px; border-radius:7px; border:1px solid var(--line);
+    background:var(--card); color:#c0c0c0; font-family:var(--mono); font-size:12px;
+    font-weight:700; cursor:pointer; text-align:center;
+  }
+  .daytab.on { background:#fff; color:#000; border-color:#fff; }
+  .daytab.logged { border-color:var(--green); }
+
+  /* Session */
+  .shead { border-radius:10px 10px 0 0; padding:0.85rem 1rem; color:#fff; }
+  .shead.str { background:linear-gradient(135deg,var(--red),#6b1414); }
+  .shead.hyp { background:linear-gradient(135deg,var(--navy),#142847); }
+  .shead.trav { background:linear-gradient(135deg,var(--trav),#4c1d95); }
+  .shead .stag { font-size:10px; opacity:0.7; font-family:var(--mono); text-transform:uppercase; letter-spacing:0.1em; }
+  .shead .stitle { font-size:18px; font-weight:700; margin-top:2px; }
+
+  .ex { background:var(--card); border:1px solid var(--line); border-top:none; }
+  .exdiv { background:var(--redBg); color:var(--redL); padding:7px 1rem; font-size:10px; font-weight:700; letter-spacing:0.1em; font-family:var(--mono); text-transform:uppercase; text-align:center; border-bottom:1px solid var(--line); }
+  .exdiv.hyp { background:var(--navyBg); color:var(--navyL); }
+  .exrow { padding:0.75rem 1rem; border-bottom:1px solid var(--line); }
+  .exname { font-size:14px; font-weight:700; color:#fff; }
+  .exrx { font-size:11px; color:var(--redL); font-family:var(--mono); margin-top:2px; }
+  .setgrid { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .setbox { display:flex; flex-direction:column; align-items:center; }
+  .setbox .setnum { font-size:10px; color:var(--dim); font-family:var(--mono); margin-bottom:3px; font-weight:700; letter-spacing:0.05em; }
+  .setbox .field { display:flex; flex-direction:column; gap:4px; }
+  .setbox .flabel { font-size:9px; color:var(--dim); font-family:var(--mono); text-align:center; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:-2px; }
+  .setbox input { width:52px; padding:7px 4px; text-align:center; background:#1a1a1a; border:1px solid var(--line); border-radius:5px; color:#fff; font-size:15px; font-family:var(--mono); }
+  .setbox input:focus { outline:none; border-color:var(--red); background:#222; }
+  .setbox.pr input.wt { border-color:var(--green); }
+  .setbox .lrpair { display:flex; gap:4px; }
+  .setbox .lrcol { display:flex; flex-direction:column; align-items:center; }
+  .setbox .lrcol input { width:36px; }
+  .setbox.lr { background:rgba(74,222,128,0.03); border-radius:6px; padding:4px; }
+  .prbadge { font-size:9px; color:var(--green); font-family:var(--mono); margin-top:6px; height:11px; }
+
+  /* Collapsible notes */
+  .notes-wrap { background:var(--card); border:1px solid var(--line); border-top:none; border-radius:0 0 10px 10px; }
+  .notes-toggle {
+    width:100%; padding:0.85rem 1rem; background:none; border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:space-between;
+    color:#d0d0d0; font-family:var(--mono); font-size:12px; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.06em;
+  }
+  .notes-toggle .arrow { transition:transform 0.2s; color:var(--dim); }
+  .notes-toggle.open .arrow { transform:rotate(90deg); }
+  .notes-body { max-height:0; overflow:hidden; transition:max-height 0.25s ease; }
+  .notes-body.open { max-height:400px; }
+  .notes-body textarea {
+    width:100%; min-height:120px; background:#1a1a1a; border:1px solid var(--line);
+    border-radius:8px; color:#fff; font-family:'Georgia',serif; font-size:14px;
+    padding:10px; margin:0 0 1rem; line-height:1.5; resize:vertical;
+  }
+  .notes-body textarea:focus { outline:none; border-color:var(--red); }
+  .notes-inner { padding:0 1rem; }
+  .notes-prompt { font-size:11px; color:var(--dim); margin-bottom:8px; font-style:italic; }
+
+  .complete-btn { width:100%; padding:14px; margin-top:12px; border:none; border-radius:10px; font-size:14px; font-weight:700; font-family:var(--mono); cursor:pointer; background:var(--card); color:var(--redL); border:1px solid var(--line); text-transform:uppercase; letter-spacing:0.06em; }
+  .complete-btn.done { background:var(--green); color:#fff; border-color:var(--green); }
+  .cardio-wrap { margin-top:12px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:0.75rem 1rem; }
+  .cardio-title { font-size:10px; color:var(--greenL); font-family:var(--mono); font-weight:700; letter-spacing:0.1em; margin-bottom:8px; }
+  .cardio-row { display:flex; align-items:center; gap:10px; padding:8px 0; cursor:pointer; border-top:1px solid var(--line); }
+  .cardio-row:first-of-type { border-top:none; }
+  .cardio-box { width:24px; height:24px; border-radius:6px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--greenL); font-weight:700; font-size:15px; flex-shrink:0; }
+  .cardio-row.done .cardio-box { background:var(--greenBg); border-color:var(--green); }
+  .cardio-label { font-size:13px; color:#e0e0e0; }
+  .cardio-row.done .cardio-label { color:var(--greenL); }
+
+  /* ── Travel day blocks ── */
+  .tblock { background:var(--card); border:1px solid var(--line); border-top:none; }
+  .tbhead { background:var(--travBg); color:var(--travL); padding:8px 1rem; font-size:11px; font-family:var(--mono); font-weight:700; letter-spacing:0.08em; border-bottom:1px solid var(--line); }
+  .walkrow { display:flex; align-items:center; gap:10px; padding:11px 1rem; cursor:pointer; border-bottom:1px solid var(--line); }
+  .walkrow.done { background:var(--greenBg); }
+  .walkbox { width:24px; height:24px; border-radius:6px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--greenL); font-weight:700; font-size:15px; flex-shrink:0; }
+  .walkrow.done .walkbox { background:var(--green); border-color:var(--green); color:#fff; }
+  .walktime { font-size:11px; color:var(--dim); font-family:var(--mono); width:66px; flex-shrink:0; }
+  .walklabel { font-size:13px; color:#e0e0e0; }
+  .walkrow.done .walklabel { color:var(--greenL); }
+  .bwblock { padding:0.5rem 1rem 0.75rem; border-bottom:1px solid var(--line); }
+  .bwtitle { font-size:10px; color:var(--travL); font-family:var(--mono); font-weight:700; letter-spacing:0.08em; margin:6px 0 8px; }
+  .bwex { margin-bottom:10px; }
+  .bwname { font-size:13px; font-weight:700; color:#fff; display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px; }
+  .bwrx { font-size:10px; color:var(--travL); font-family:var(--mono); font-weight:400; }
+  .bwsets { display:flex; gap:5px; }
+  .bwset { display:flex; flex-direction:column; align-items:center; flex:1; }
+  .bwset label { font-size:10px; color:var(--dim); font-family:var(--mono); margin-bottom:2px; }
+  .bwset input { width:100%; max-width:48px; padding:6px 2px; text-align:center; background:#1a1a1a; border:1px solid var(--line); border-radius:5px; color:#fff; font-size:14px; font-family:var(--mono); }
+  .bwset input:focus { outline:none; border-color:var(--trav); }
+  .tsummary { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; background:var(--card); border:1px solid var(--line); border-top:none; border-radius:0 0 10px 10px; padding:0.9rem 1rem; text-align:center; }
+  .tsummary .tsv { display:block; font-size:19px; font-weight:700; color:#fff; font-family:var(--mono); }
+  .tsummary .tsv.green { color:var(--greenL); }
+  .tsummary .tsl { display:block; font-size:9px; color:var(--dim); font-family:var(--mono); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
+
+  .restday { background:var(--card); border:1px solid var(--line); border-radius:0 0 10px 10px; padding:1.5rem 1rem; text-align:center; color:var(--dim); font-size:13px; line-height:1.6; }
+
+  .tabbar { position:fixed; bottom:0; left:0; right:0; background:#0c0c0c; border-top:1px solid var(--line); display:flex; z-index:40; padding-bottom:env(safe-area-inset-bottom); }
+  .tabbar button { flex:1; padding:11px 4px; background:none; border:none; cursor:pointer; color:#9a9a9a; font-family:var(--mono); font-size:10px; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .tabbar button.on { color:var(--redL); }
+  .tabbar .ico { font-size:17px; }
+
+  .section-title { font-size:11px; color:var(--redL); font-family:var(--mono); text-transform:uppercase; letter-spacing:0.1em; margin:1.25rem 0 0.75rem; }
+  .prcard { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:1rem; margin-bottom:10px; }
+  .prcard h3 { font-size:14px; color:#fff; margin-bottom:8px; }
+  .prline { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--line); font-size:12px; }
+  .prline:last-child { border:none; }
+  .prline .lift { color:#dcdcdc; }
+  .prline .val { color:var(--green); font-family:var(--mono); font-weight:700; }
+  .databtn { width:100%; padding:12px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:#e0e0e0; font-family:var(--mono); font-size:13px; cursor:pointer; margin-bottom:8px; }
+  .databtn.danger { color:var(--redL); border-color:#3a1515; }
+  .hint { font-size:11px; color:var(--dim); line-height:1.6; margin-bottom:1rem; }
+  textarea.data { width:100%; height:120px; background:#1a1a1a; border:1px solid var(--line); border-radius:8px; color:#fff; font-family:var(--mono); font-size:11px; padding:10px; }
+  .toast { position:fixed; bottom:78px; left:50%; transform:translateX(-50%); background:var(--green); color:#fff; padding:10px 20px; border-radius:8px; font-family:var(--mono); font-size:13px; z-index:100; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+  .toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="name">Christopher Caleb Deehan</div>
+  <h1>Week by Week<span>.</span></h1>
+  <div class="sub">28 Weeks · Jun–Dec 2026 · DUP</div>
+</div>
+
+<div class="wrap">
+  <div id="view-log"></div>
+  <div id="view-progress" style="display:none"></div>
+  <div id="view-data" style="display:none"></div>
+</div>
+
+<div class="tabbar">
+  <button class="on" data-tab="log"><span class="ico">🏋️</span>Workout</button>
+  <button data-tab="progress"><span class="ico">📈</span>PRs</button>
+  <button data-tab="data"><span class="ico">💾</span>Data</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ─── WEEK SCHEDULE (28 weeks) ─────────────────────────── */
+const WEEKS = [
+  {wk:1,start:"2026-07-06",dates:"Jul 6–12",focus:"strength",phase:1,note:"Fresh start. Week 1 back in the gym."},
+  {wk:2,start:"2026-07-13",dates:"Jul 13–19",focus:"strength",phase:1,note:"Mixed week. Train Mon–Wed. Travel Fri 17th (off). Travel blocks start Sat 18th.",
+    override:{fri:"off", sat:"travel", sun:"travel"}},
+  {wk:3,start:"2026-07-20",dates:"Jul 20–26",focus:"travel",phase:1,note:"Out of state. Travel blocks Mon–Sat. Sun 26th travel home (off).",
+    override:{sun:"off"}},
+  {wk:4,start:"2026-07-27",dates:"Jul 27–Aug 2",focus:"hypertrophy",phase:1,note:"Back home. Resume full training."},
+  {wk:5,start:"2026-08-03",dates:"Aug 3–9",focus:"strength",phase:1,note:""},
+  {wk:6,start:"2026-08-10",dates:"Aug 10–16",focus:"hypertrophy",phase:1,note:""},
+  {wk:7,start:"2026-08-17",dates:"Aug 17–23",focus:"strength",phase:1,note:""},
+  {wk:8,start:"2026-08-24",dates:"Aug 24–30",focus:"hypertrophy",phase:1,note:"Phase 1 ends. Review weight progress."},
+  {wk:9,start:"2026-08-31",dates:"Aug 31–Sep 6",focus:"strength",phase:2,note:"Phase 2 starts. RDL & Goblet: form only, no load."},
+  {wk:10,start:"2026-09-07",dates:"Sep 7–13",focus:"travel",phase:2,note:"North Carolina. Bodyweight + walking only."},
+  {wk:11,start:"2026-09-14",dates:"Sep 14–20",focus:"hypertrophy",phase:2,note:"Back to training. RDL & Goblet: form week 2."},
+  {wk:12,start:"2026-09-21",dates:"Sep 21–27",focus:"strength",phase:2,note:"Last form week. Load RDL & Goblet from next week."},
+  {wk:13,start:"2026-09-28",dates:"Sep 28–Oct 4",focus:"hypertrophy",phase:2,note:"RDL & Goblet Squat now loaded. Progress weekly."},
+  {wk:14,start:"2026-10-05",dates:"Oct 5–11",focus:"strength",phase:2,note:""},
+  {wk:15,start:"2026-10-12",dates:"Oct 12–18",focus:"hypertrophy",phase:2,note:""},
+  {wk:16,start:"2026-10-19",dates:"Oct 19–25",focus:"strength",phase:2,note:"Phase 2 ends. Assess lower body progress."},
+  {wk:17,start:"2026-10-26",dates:"Oct 26–Nov 1",focus:"hypertrophy",phase:3,note:"Phase 3: full overload mandatory."},
+  {wk:18,start:"2026-11-02",dates:"Nov 2–8",focus:"strength",phase:3,note:""},
+  {wk:19,start:"2026-11-09",dates:"Nov 9–15",focus:"hypertrophy",phase:3,note:""},
+  {wk:20,start:"2026-11-16",dates:"Nov 16–22",focus:"strength",phase:3,note:""},
+  {wk:21,start:"2026-11-23",dates:"Nov 23–29",focus:"hypertrophy",phase:3,note:""},
+  {wk:22,start:"2026-11-30",dates:"Nov 30–Dec 6",focus:"strength",phase:3,note:""},
+  {wk:23,start:"2026-12-07",dates:"Dec 7–13",focus:"hypertrophy",phase:3,note:""},
+  {wk:24,start:"2026-12-14",dates:"Dec 14–20",focus:"strength",phase:3,note:""},
+  {wk:25,start:"2026-12-21",dates:"Dec 21–27",focus:"hypertrophy",phase:3,note:""},
+  {wk:26,start:"2026-12-28",dates:"Dec 28–Jan 3",focus:"strength",phase:3,note:""},
+  {wk:27,start:"2027-01-04",dates:"Jan 4–10",focus:"hypertrophy",phase:3,note:""},
+  {wk:28,start:"2027-01-11",dates:"Jan 11–17",focus:"strength",phase:3,note:"Final week. Full review before next block."},
+];
+
+/* Resolve the effective focus for a given day (handles per-day overrides) */
+const DAY_ORDER=["mon","tue","wed","thu","fri","sat","sun"];
+function dayFocus(wkObj,dayKey){
+  if(wkObj.override && wkObj.override[dayKey]) return wkObj.override[dayKey];
+  return wkObj.focus;
+}
+/* Real calendar date for a given week + day */
+function dayDate(wkObj,dayKey){
+  const idx=DAY_ORDER.indexOf(dayKey);
+  const [y,m,d]=wkObj.start.split("-").map(Number);
+  const dt=new Date(y,m-1,d+idx);
+  const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  return {
+    short:`${MON[dt.getMonth()]} ${dt.getDate()}`,
+    full:`${DOW[dt.getDay()]}, ${MON[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`,
+    num:dt.getDate(),
+  };
+}
+
+const PHASES = {
+  1:{label:"Phase 1",health:"~353→321 lbs",lower:"Machines only — no RDL/Goblet",cardio:"1 hr · 130–150 bpm",fast:"24-hr weekly"},
+  2:{label:"Phase 2",health:"~321→305 lbs",lower:"+RDL & Goblet Squat",cardio:"1 hr · 130–150 bpm",fast:"24-hr + optional 36-hr"},
+  3:{label:"Phase 3",health:"~305→284 lbs",lower:"Full lower body — overload",cardio:"1 hr · 130–150 bpm",fast:"24-hr + 48-hr monthly"},
+};
+
+/* ─── EXERCISES ────────────────────────────────────────── */
+/* flags: pr=track PR · lr=Left/Right inputs per set · fail=to failure */
+
+// Shared ARM finisher (Upper weekdays) — all to failure, 3 sets each
+const ARM_FINISHER=[
+  {div:"ARM FINISHER · to failure"},
+  {n:"Straight Bar Curl",rx:"3 sets · failure",sets:3,fail:true},
+  {n:"Overhead Tricep Ext",rx:"3 sets · failure",sets:3,fail:true},
+  {n:"Hammer Curl",rx:"3 sets · failure · per arm",sets:3,fail:true,lr:true},
+  {n:"Tricep Pushdown",rx:"3 sets · failure",sets:3,fail:true},
+  {n:"Concentration Curl",rx:"3 sets · failure · per arm",sets:3,fail:true,lr:true},
+  {n:"DB Skull Crushers",rx:"3 sets · failure",sets:3,fail:true},
+];
+// Shared GRIP finisher (Lower days) — all to failure, 3 sets each, all L/R
+const GRIP_FINISHER=[
+  {div:"GRIP FINISHER · to failure"},
+  {n:"Posterior Wrist Curl",rx:"3 sets · failure · per hand",sets:3,fail:true,lr:true},
+  {n:"Anterior Wrist Raise",rx:"3 sets · failure · per hand",sets:3,fail:true,lr:true},
+  {n:"Crusher",rx:"3 sets · failure · per hand",sets:3,fail:true,lr:true},
+  {n:"Static Hold",rx:"3 sets · failure · per hand",sets:3,fail:true,lr:true},
+];
+
+/* ─── TRAVEL: structured 3-block day (Jul 18–25 spec) ──── */
+// Same bodyweight block used AM and PM
+const BW_BLOCK=[
+  {n:"Push-Ups",rx:"5 sets × 10 reps",sets:5},
+  {n:"Crunches",rx:"5 sets × 20 reps",sets:5},
+  {n:"Squats",rx:"5 sets × 20 reps",sets:5},
+  {n:"Plank",rx:"5 sets × 60 sec hold",sets:5},
+];
+// Walk blocks for the travel schedule
+const TRAVEL_WALKS=[
+  {id:"am1",   time:"6:00 AM",  label:"1 hr walk",            mins:60},
+  {id:"amBW",  time:"6:00 AM",  label:"Bodyweight block",     bw:true},
+  {id:"am2",   time:"~7:20 AM", label:"1 hr walk (finisher)", mins:60},
+  {id:"pm1",   time:"1:00 PM",  label:"1 hr walk",            mins:60},
+  {id:"pmBW",  time:"7:00 PM",  label:"Bodyweight block",     bw:true},
+  {id:"pm2",   time:"~7:20 PM", label:"1 hr walk (finisher)", mins:60},
+];
+
+// ── UPPER (weekdays Mon/Wed) — ARMS finisher only ──
+const UPPER_S=[
+  {n:"Barbell Bench Press",rx:"5 sets · failure · HEAVY · use safety pins",sets:5,pr:true,fail:true},
+  {n:"Barbell Row (Pendlay)",rx:"5 sets · failure · HEAVY",sets:5,pr:true,fail:true},
+  {n:"Overhead Press",rx:"4 sets · failure · HEAVY · use safety pins",sets:4,pr:true,fail:true},
+  {n:"Pull-Ups / Lat Pulldown",rx:"4 sets · failure · add weight",sets:4,pr:true,fail:true},
+  ...ARM_FINISHER,
+];
+const UPPER_H=[
+  {n:"Incline Dumbbell Press",rx:"4 sets · failure · 60s rest",sets:4,pr:true,fail:true},
+  {n:"Cable Row",rx:"4 sets · failure · 60s rest",sets:4,pr:true,fail:true},
+  {n:"Overhead Press (DB)",rx:"3 sets · failure · 60s rest",sets:3,pr:true,fail:true},
+  {n:"Lat Pulldown",rx:"3 sets · failure · 60s rest",sets:3,pr:true,fail:true},
+  {n:"Lateral Raise",rx:"3 sets · failure · per arm · 45s",sets:3,fail:true,lr:true},
+  {n:"Face Pull",rx:"3 sets · failure · 45s rest",sets:3,fail:true},
+  ...ARM_FINISHER,
+];
+
+// ── LOWER A (Tue) — GRIP finisher ──
+const LA_S=[
+  {n:"Leg Press",rx:"5 sets · failure · HEAVY · use safety stops",sets:5,pr:true,fail:true},
+  {n:"Leg Extension",rx:"3 sets · failure · per leg",sets:3,fail:true,lr:true},
+  {n:"Hamstring Curl",rx:"3 sets · failure · per leg",sets:3,fail:true,lr:true},
+  {n:"Hip Abduction",rx:"3 sets · failure",sets:3,fail:true},
+  {n:"Hip Adduction",rx:"3 sets · failure",sets:3,fail:true},
+  {n:"Calf Raise",rx:"4 sets · failure · slow",sets:4,fail:true},
+  ...GRIP_FINISHER,
+];
+const LA_S_RDL={n:"Romanian Deadlift",rx:"4 sets · failure · controlled",sets:4,pr:true,fail:true};
+const LA_H=[
+  {n:"Leg Press",rx:"4 sets · failure · 60s",sets:4,pr:true,fail:true},
+  {n:"Leg Extension",rx:"4 sets · failure · per leg · squeeze",sets:4,fail:true,lr:true},
+  {n:"Hamstring Curl",rx:"4 sets · failure · per leg · slow",sets:4,fail:true,lr:true},
+  {n:"Hip Abduction",rx:"3 sets · failure · 45s",sets:3,fail:true},
+  {n:"Hip Adduction",rx:"3 sets · failure · 45s",sets:3,fail:true},
+  {n:"Calf Raise",rx:"4 sets · failure · full ROM",sets:4,fail:true},
+  ...GRIP_FINISHER,
+];
+const LA_H_RDL={n:"Romanian Deadlift",rx:"3 sets · failure · slow eccentric",sets:3,pr:true,fail:true};
+
+// ── LOWER B (Fri) — GRIP finisher ──
+const LB_S=[
+  {n:"Leg Press",rx:"5 sets · failure · HEAVY · use safety stops",sets:5,pr:true,fail:true},
+  {n:"Leg Extension",rx:"3 sets · failure · per leg",sets:3,fail:true,lr:true},
+  {n:"Hamstring Curl",rx:"3 sets · failure · per leg",sets:3,fail:true,lr:true},
+  {n:"Hip Abduction",rx:"3 sets · failure",sets:3,fail:true},
+  {n:"Hip Adduction",rx:"3 sets · failure",sets:3,fail:true},
+  {n:"Calf Raise",rx:"4 sets · failure · slow",sets:4,fail:true},
+  ...GRIP_FINISHER,
+];
+const LB_S_GOB={n:"Goblet Squat",rx:"3 sets · failure · full depth",sets:3,pr:true,fail:true};
+const LB_H=[
+  {n:"Leg Press",rx:"4 sets · failure · 60s",sets:4,pr:true,fail:true},
+  {n:"Leg Extension",rx:"4 sets · failure · per leg · squeeze",sets:4,fail:true,lr:true},
+  {n:"Hamstring Curl",rx:"4 sets · failure · per leg · slow",sets:4,fail:true,lr:true},
+  {n:"Hip Abduction",rx:"3 sets · failure · 45s",sets:3,fail:true},
+  {n:"Hip Adduction",rx:"3 sets · failure · 45s",sets:3,fail:true},
+  {n:"Calf Raise",rx:"4 sets · failure · full ROM",sets:4,fail:true},
+  ...GRIP_FINISHER,
+];
+const LB_H_GOB={n:"Goblet Squat",rx:"3 sets · failure · pause 1s bottom",sets:3,pr:true,fail:true};
+
+// ── UPPER C (Sat) — BOTH arms & grip, all to failure, all 4 sets ──
+const UPPER_C=[
+  {n:"Close-Grip Bench Press",rx:"4 sets · failure",sets:4,pr:true,fail:true},
+  {n:"Incline Dumbbell Curl",rx:"4 sets · failure",sets:4,fail:true},
+  {n:"Cable Tricep Pushdown",rx:"4 sets · failure",sets:4,fail:true},
+  {n:"Preacher Curl",rx:"4 sets · failure · per arm",sets:4,fail:true,lr:true},
+  {n:"Overhead Tricep Ext",rx:"4 sets · failure",sets:4,fail:true},
+  {n:"Concentration Curl",rx:"4 sets · failure · per arm",sets:4,fail:true,lr:true},
+  {n:"Hammer Curl",rx:"4 sets · failure · per arm",sets:4,fail:true,lr:true},
+  {n:"DB Skull Crushers",rx:"4 sets · failure",sets:4,fail:true},
+  {div:"GRIP FINISHER · to failure"},
+  {n:"Posterior Wrist Curl",rx:"4 sets · failure · per hand",sets:4,fail:true,lr:true},
+  {n:"Anterior Wrist Raise",rx:"4 sets · failure · per hand",sets:4,fail:true,lr:true},
+  {n:"Crusher",rx:"4 sets · failure · per hand",sets:4,fail:true,lr:true},
+  {n:"Static Hold",rx:"4 sets · failure · per hand",sets:4,fail:true,lr:true},
+];
+
+const DAYS=[
+  {key:"mon",label:"Mon",session:"upper"},
+  {key:"tue",label:"Tue",session:"lowerA"},
+  {key:"wed",label:"Wed",session:"upper"},
+  {key:"thu",label:"Thu",session:"rest",note:"Cycle only · Fast day"},
+  {key:"fri",label:"Fri",session:"lowerB"},
+  {key:"sat",label:"Sat",session:"upperC"},
+  {key:"sun",label:"Sun",session:"rest",note:"Full rest"},
+];
+
+function getExercises(session,phase,focus){
+  // Travel weeks: same bodyweight block every day (AM + PM)
+  if(focus==="travel"){ return BW_BLOCK; }
+  const isStr=focus==="strength";
+  const isP1=phase===1;
+  if(session==="upper") return isStr?UPPER_S:UPPER_H;
+  if(session==="upperC") return UPPER_C;
+  if(session==="lowerA"){const b=isStr?LA_S:LA_H; return isP1?b:[...b,isStr?LA_S_RDL:LA_H_RDL];}
+  if(session==="lowerB"){const b=isStr?LB_S:LB_H; return isP1?b:[...b,isStr?LB_S_GOB:LB_H_GOB];}
+  return [];
+}
+
+/* ─── STATE ────────────────────────────────────────────── */
+const KEY="deehan_wbw_v1";
+let state={week:1,day:"mon",logs:{},notes:{},completed:{},notesOpen:{},cardio:{}};
+function load(){try{const r=localStorage.getItem(KEY);if(r)state=Object.assign(state,JSON.parse(r));}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){toast("⚠ Save failed");}}
+function curWeek(){return WEEKS.find(w=>w.wk===state.week);}
+function logKey(){return `w${state.week}_${state.day}`;}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1700);}
+
+/* ─── RENDER LOG ───────────────────────────────────────── */
+function renderLog(){
+  const v=document.getElementById("view-log");
+  const wkObj=curWeek();
+  const ph=PHASES[wkObj.phase];
+  const dayObj=DAYS.find(d=>d.key===state.day);
+
+  // Effective focus for THIS day (respects per-day overrides)
+  const dFocus=dayFocus(wkObj,state.day);
+  const isStr=dFocus==="strength";
+  const isTravel=dFocus==="travel";
+  const isOff=dFocus==="off";
+  const dDate=dayDate(wkObj,state.day);
+
+  let html="";
+
+  // Week nav
+  const wkLabel=wkObj.override?"MIXED":(wkObj.focus==="travel"?"TRAVEL":ph.label);
+  const todayHit=resolveToday();
+  const isToday=todayHit && todayHit.week===state.week && todayHit.day===state.day;
+  html+=`<div class="weeknav">`;
+  html+=`<button onclick="changeWeek(-1)" ${state.week===1?'disabled style="opacity:0.3"':''}>‹</button>`;
+  html+=`<div class="wkinfo"><div class="wknum">Week ${wkObj.wk}</div><div class="wkmeta">${wkObj.dates} · ${wkLabel}</div></div>`;
+  html+=`<button onclick="changeWeek(1)" ${state.week===28?'disabled style="opacity:0.3"':''}>›</button>`;
+  html+=`</div>`;
+  if(!isToday && todayHit){
+    html+=`<button class="todaybtn" onclick="jumpToToday(false)">📅 Jump to Today</button>`;
+  }
+
+  // Week picker dots
+  html+=`<div class="weekpicker">`;
+  WEEKS.forEach(w=>{
+    const on=w.wk===state.week?'on':'';
+    const cls=w.focus==='strength'?'str':w.focus==='travel'?'trav':'hyp';
+    const tw=(todayHit && todayHit.week===w.wk)?'thisweek':'';
+    html+=`<div class="wkdot ${cls} ${on} ${tw}" onclick="gotoWeek(${w.wk})">${w.wk}</div>`;
+  });
+  html+=`</div>`;
+
+  // Banner (reflects THIS day)
+  if(isOff){
+    html+=`<div class="pbanner off"><span class="focus">⊘ NO TRAINING</span><br><b>${dDate.full}</b><br>Travel day. Rest, hydrate, walk if you can.</div>`;
+  } else if(isTravel){
+    html+=`<div class="pbanner trav"><span class="focus">✈ TRAVEL BLOCK</span><br><b>3 blocks · 4 hrs walking + 2 bodyweight</b><br>6AM walk+BW+walk · 1PM walk · 7PM BW+walk<br>~2,750 kcal/day burn est.</div>`;
+  } else {
+    html+=`<div class="pbanner ${isStr?'str':'hyp'}"><span class="focus">${isStr?'STRENGTH WEEK':'HYPERTROPHY WEEK'}</span><br><b>${ph.label}</b> · ${ph.health}<br>Lower: ${ph.lower} · Cardio: ${ph.cardio}</div>`;
+  }
+
+  // Week note
+  if(wkObj.note) html+=`<div class="weeknote ${wkObj.override||wkObj.focus==='travel'?'trav':''}">${wkObj.note}</div>`;
+
+  // Day tabs — now show the date under each day
+  html+=`<div class="daytabs">`;
+  DAYS.forEach(d=>{
+    const logged=!!state.completed[completedKey(state.week,d.key)];
+    const f=dayFocus(wkObj,d.key);
+    const dt=dayDate(wkObj,d.key);
+    const fcls=f==="off"?"offday":f==="travel"?"travday":"";
+    const tcls=(todayHit && todayHit.week===state.week && todayHit.day===d.key)?"istoday":"";
+    html+=`<div class="daytab ${state.day===d.key?'on':''} ${logged?'logged':''} ${fcls} ${tcls}" onclick="setDay('${d.key}')">`;
+    html+=`<span class="dtl">${d.label}</span><span class="dtd">${dt.num}</span>`;
+    html+=`</div>`;
+  });
+  html+=`</div>`;
+
+  // Selected day date header
+  html+=`<div class="datehead">${dDate.full}${isToday?' · TODAY':''}</div>`;
+
+  // ── OFF DAY ──
+  if(isOff){
+    html+=`<div class="shead off"><div class="stag">${dayObj.label} · ${dDate.short}</div><div class="stitle">No Training — Travel Day</div></div>`;
+    html+=`<div class="restday">`;
+    html+=`✈️ Travel day.<br><small style="color:var(--dim)">No structured training. Move if you can, hydrate, stay in your deficit.</small>`;
+    html+=`</div>`;
+    html+=renderNotes(false);
+    v.innerHTML=html;
+    return;
+  }
+
+  // ── TRAVEL DAY: 3-block structured day ──
+  if(isTravel){
+    html+=renderTravelDay(dDate);
+    html+=renderNotes(false);
+    v.innerHTML=html;
+    return;
+  }
+
+  // ── REST DAY (normal weeks) ──
+  if(dayObj.session==="rest"){
+    const restColor=isStr?'str':'hyp';
+    html+=`<div class="shead ${restColor}"><div class="stag">${dayObj.label} · ${dDate.short}</div><div class="stitle">${dayObj.note}</div></div>`;
+    html+=`<div class="restday">`;
+    html+=dayObj.key==="thu"?`🚲 1 hr fasted cycling · 130–150 bpm<br><small style="color:var(--dim)">Drop to 115–125 if genuinely weak. No lifting.</small>`:`🛑 Complete rest.<br><small style="color:var(--dim)">No cycling, no lifting. Recover.</small>`;
+    html+=`</div>`;
+    html+=renderCardio();
+    html+=renderNotes(isStr);
+    v.innerHTML=html;
+    return;
+  }
+
+  // ── TRAINING SESSION ──
+  let sessTitle, sessTag, headColor;
+  {
+    const names={upper:isStr?"Upper — Strength":"Upper — Hypertrophy",lowerA:isStr?"Lower A — Strength":"Lower A — Hypertrophy",lowerB:isStr?"Lower B — Strength":"Lower B — Hypertrophy",upperC:"Upper C — Arms & Grip"};
+    const dayName=dayObj.session==="upper"?(state.day==="mon"?"Monday":"Wednesday"):dayObj.label;
+    sessTitle=names[dayObj.session];
+    sessTag=`${dayName} · ${dDate.short} · ${isStr?'STRENGTH':'HYPERTROPHY'}`;
+    headColor=isStr?'str':'hyp';
+  }
+  html+=`<div class="shead ${headColor}"><div class="stag">${sessTag}</div><div class="stitle">${sessTitle}</div></div>`;
+
+  const exercises=getExercises(dayObj.session,wkObj.phase,dFocus);
+  const lk=logKey();
+  const dayLog=state.logs[lk]||{};
+
+  exercises.forEach((ex,ei)=>{
+    if(ex.div){html+=`<div class="exdiv ${isStr?'':'hyp'}">${ex.div}</div>`;return;}
+    const exLog=dayLog[ei]||{};
+    html+=`<div class="ex"><div class="exrow">`;
+    html+=`<div class="exname">${ex.n}</div><div class="exrx">${ex.rx}</div>`;
+    html+=`<div class="setgrid">`;
+    for(let s=0;s<ex.sets;s++){
+      const sd=exLog[s]||{};
+      if(ex.lr){
+        // Left/Right inputs: one WT shared + L reps + R reps (per set)
+        html+=`<div class="setbox lr ${ex.pr?'pr':''}"><div class="setnum">SET ${s+1}</div><div class="field">`;
+        html+=`<div class="flabel">WT</div><input type="text" inputmode="numeric" maxlength="3" class="wt" value="${sd.wt||''}" placeholder="–" onchange="logSet(${ei},${s},'wt',this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">`;
+        html+=`<div class="lrpair">`;
+        html+=`<div class="lrcol"><div class="flabel">L</div><input type="text" inputmode="numeric" maxlength="3" class="reps" value="${sd.repsL||''}" placeholder="–" onchange="logSet(${ei},${s},'repsL',this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>`;
+        html+=`<div class="lrcol"><div class="flabel">R</div><input type="text" inputmode="numeric" maxlength="3" class="reps" value="${sd.repsR||''}" placeholder="–" onchange="logSet(${ei},${s},'repsR',this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>`;
+        html+=`</div></div></div>`;
+      } else {
+        html+=`<div class="setbox ${ex.pr?'pr':''}"><div class="setnum">SET ${s+1}</div><div class="field">`;
+        html+=`<div class="flabel">WT</div><input type="text" inputmode="numeric" maxlength="3" class="wt" value="${sd.wt||''}" placeholder="–" onchange="logSet(${ei},${s},'wt',this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">`;
+        html+=`<div class="flabel">REPS</div><input type="text" inputmode="numeric" maxlength="3" class="reps" value="${sd.reps||''}" placeholder="–" onchange="logSet(${ei},${s},'reps',this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">`;
+        html+=`</div></div>`;
+      }
+    }
+    html+=`</div>`;
+    if(ex.pr){const b=getPR(ex.n);html+=b?`<div class="prbadge" style="padding:0 1rem 0.5rem">PR: ${b} lbs</div>`:`<div class="prbadge"></div>`;}
+    html+=`</div>`;
+  });
+
+  // Complete button
+  const ck=completedKey(state.week,state.day);
+  const done=state.completed[ck];
+  html+=`<button class="complete-btn ${done?'done':''}" onclick="toggleComplete()">${done?'✓ Completed':'Mark Session Complete'}</button>`;
+
+  // Cardio checkboxes
+  html+=renderCardio();
+
+  // Collapsible notes
+  html+=renderNotes(isStr);
+
+  v.innerHTML=html;
+}
+
+function renderNotes(isStr){
+  const nk=notesKey(state.week,state.day);
+  const noteVal=state.notes[nk]||"";
+  const isOpen=state.notesOpen[nk];
+  let h=`<div class="notes-wrap" style="margin-top:12px;border-radius:10px;border-top:1px solid var(--line)">`;
+  h+=`<button class="notes-toggle ${isOpen?'open':''}" onclick="toggleNotes()"><span>📝 Session Notes${noteVal?' •':''}</span><span class="arrow">›</span></button>`;
+  h+=`<div class="notes-body ${isOpen?'open':''}">`;
+  h+=`<div class="notes-inner">`;
+  h+=`<div class="notes-prompt">PRs hit, how it felt, what to load next time, form cues…</div>`;
+  h+=`<textarea placeholder="Type your notes for this session…" onchange="saveNote(this.value)">${noteVal}</textarea>`;
+  h+=`</div></div></div>`;
+  return h;
+}
+
+function logKeyFor(day){return `w${state.week}_${day}`;}
+function completedKey(wk,day){return `w${wk}_${day}`;}
+function notesKey(wk,day){return `w${wk}_${day}`;}
+function cardioKey(wk,day,type){return `w${wk}_${day}_${type}`;}
+
+function renderCardio(){
+  const day=state.day;
+  const isThuSun = day==="thu"||day==="sun";
+  const amKey=cardioKey(state.week,day,"am");
+  const pmKey=cardioKey(state.week,day,"pm");
+  const amDone=state.cardio[amKey];
+  const pmDone=state.cardio[pmKey];
+  let h=`<div class="cardio-wrap">`;
+  h+=`<div class="cardio-title">CARDIO</div>`;
+  // Morning cardio — every day
+  h+=`<label class="cardio-row ${amDone?'done':''}" onclick="toggleCardio('am')">`;
+  h+=`<span class="cardio-box">${amDone?'✓':''}</span>`;
+  h+=`<span class="cardio-label">🚶 Morning walk · 45–60 min</span>`;
+  h+=`</label>`;
+  // Extra cardio — Thu & Sun only
+  if(isThuSun){
+    h+=`<label class="cardio-row ${pmDone?'done':''}" onclick="toggleCardio('pm')">`;
+    h+=`<span class="cardio-box">${pmDone?'✓':''}</span>`;
+    h+=`<span class="cardio-label">➕ Additional cardio (on top of morning)</span>`;
+    h+=`</label>`;
+  }
+  h+=`</div>`;
+  return h;
+}
+function toggleCardio(type){
+  const k=cardioKey(state.week,state.day,type);
+  if(state.cardio[k])delete state.cardio[k];
+  else state.cardio[k]=true;
+  save();renderLog();
+}
+
+/* ─── TRAVEL DAY: 3 time blocks ────────────────────────── */
+function travelWalkKey(wk,day,id){return `w${wk}_${day}_walk_${id}`;}
+function toggleWalk(id){
+  const k=travelWalkKey(state.week,state.day,id);
+  if(state.cardio[k])delete state.cardio[k];
+  else state.cardio[k]=true;
+  save();renderLog();
+}
+
+function bwSetKey(slot){ return `w${state.week}_${state.day}_bw_${slot}`; }
+
+function logBW(slot,ei,s,field,val){
+  const k=bwSetKey(slot);
+  if(!state.logs[k])state.logs[k]={};
+  if(!state.logs[k][ei])state.logs[k][ei]={};
+  if(!state.logs[k][ei][s])state.logs[k][ei][s]={};
+  state.logs[k][ei][s][field]=val;
+  save();
+}
+
+function bwBlockHTML(slot,label){
+  const k=bwSetKey(slot);
+  const log=state.logs[k]||{};
+  let h=`<div class="bwblock">`;
+  h+=`<div class="bwtitle">${label}</div>`;
+  BW_BLOCK.forEach((ex,ei)=>{
+    const exLog=log[ei]||{};
+    h+=`<div class="bwex">`;
+    h+=`<div class="bwname">${ex.n}<span class="bwrx">${ex.rx}</span></div>`;
+    h+=`<div class="bwsets">`;
+    for(let s=0;s<ex.sets;s++){
+      const v=(exLog[s]||{}).reps||"";
+      h+=`<div class="bwset"><label>${s+1}</label><input type="text" inputmode="numeric" maxlength="3" value="${v}" placeholder="–" onchange="logBW('${slot}',${ei},${s},'reps',this.value)" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>`;
+    }
+    h+=`</div></div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
+function walkRow(id,time,label){
+  const k=travelWalkKey(state.week,state.day,id);
+  const done=state.cardio[k];
+  return `<label class="walkrow ${done?'done':''}" onclick="toggleWalk('${id}')">
+    <span class="walkbox">${done?'✓':''}</span>
+    <span class="walktime">${time}</span>
+    <span class="walklabel">🚶 ${label}</span>
+  </label>`;
+}
+
+function renderTravelDay(dDate){
+  const dayObj=DAYS.find(d=>d.key===state.day);
+  let h=``;
+
+  // Day header
+  h+=`<div class="shead trav"><div class="stag">${dayObj.label} · ${dDate?dDate.short:''} · TRAVEL BLOCK</div><div class="stitle">Walk + Bodyweight · 3 Blocks</div></div>`;
+
+  // ── MORNING BLOCK ──
+  h+=`<div class="tblock">`;
+  h+=`<div class="tbhead">🌅 MORNING · 6:00 AM</div>`;
+  h+=walkRow("am1","6:00 AM","1 hr walk");
+  h+=bwBlockHTML("am","BODYWEIGHT BLOCK");
+  h+=walkRow("am2","~7:20 AM","1 hr walk · finisher");
+  h+=`</div>`;
+
+  // ── AFTERNOON BLOCK ──
+  h+=`<div class="tblock">`;
+  h+=`<div class="tbhead">☀️ AFTERNOON · 1:00 PM</div>`;
+  h+=walkRow("pm1","1:00 PM","1 hr walk");
+  h+=`</div>`;
+
+  // ── EVENING BLOCK ──
+  h+=`<div class="tblock">`;
+  h+=`<div class="tbhead">🌙 EVENING · 7:00 PM</div>`;
+  h+=bwBlockHTML("pm","BODYWEIGHT BLOCK");
+  h+=walkRow("pm2","~7:20 PM","1 hr walk · finisher");
+  h+=`</div>`;
+
+  // Daily summary
+  const walks=["am1","am2","pm1","pm2"];
+  const doneWalks=walks.filter(id=>state.cardio[travelWalkKey(state.week,state.day,id)]).length;
+  const est=Math.round(doneWalks*583 + (state.logs[bwSetKey("am")]?211:0) + (state.logs[bwSetKey("pm")]?211:0));
+  h+=`<div class="tsummary">`;
+  h+=`<div><span class="tsv">${doneWalks}/4</span><span class="tsl">walks done</span></div>`;
+  h+=`<div><span class="tsv">${doneWalks}h</span><span class="tsl">walking</span></div>`;
+  h+=`<div><span class="tsv green">~${est}</span><span class="tsl">kcal burned</span></div>`;
+  h+=`</div>`;
+
+  // Complete button
+  const ck=completedKey(state.week,state.day);
+  const done=state.completed[ck];
+  h+=`<button class="complete-btn ${done?'done':''}" onclick="toggleComplete()">${done?'✓ Day Complete':'Mark Day Complete'}</button>`;
+
+  return h;
+}
+
+function logSet(ei,s,field,val){
+  const lk=logKey();
+  if(!state.logs[lk])state.logs[lk]={};
+  if(!state.logs[lk][ei])state.logs[lk][ei]={};
+  if(!state.logs[lk][ei][s])state.logs[lk][ei][s]={};
+  state.logs[lk][ei][s][field]=val;
+  save();
+}
+function saveNote(val){
+  const nk=notesKey(state.week,state.day);
+  state.notes[nk]=val; save();
+}
+function toggleNotes(){
+  const nk=notesKey(state.week,state.day);
+  state.notesOpen[nk]=!state.notesOpen[nk]; save(); renderLog();
+}
+function toggleComplete(){
+  const ck=completedKey(state.week,state.day);
+  if(state.completed[ck])delete state.completed[ck];
+  else{state.completed[ck]=true;toast("✓ Session logged");}
+  save();renderLog();
+}
+function changeWeek(dir){
+  const nw=state.week+dir;
+  if(nw<1||nw>28)return;
+  state.week=nw; save(); renderLog();
+  window.scrollTo(0,0);
+}
+function gotoWeek(wk){state.week=wk;save();renderLog();window.scrollTo(0,0);}
+function setDay(d){state.day=d;save();renderLog();}
+
+function getPR(exName){
+  let best=0;
+  for(const lk in state.logs){
+    const parts=lk.match(/w(\d+)_(\w+)/);
+    if(!parts)continue;
+    const wkNum=+parts[1],dy=parts[2];
+    const wkObj=WEEKS.find(w=>w.wk===wkNum);
+    if(!wkObj)continue;
+    const dayObj=DAYS.find(d=>d.key===dy);
+    if(!dayObj||dayObj.session==="rest")continue;
+    const exs=getExercises(dayObj.session,wkObj.phase,wkObj.focus).filter(e=>!e.div);
+    exs.forEach((ex,ei)=>{
+      if(ex.n===exName&&state.logs[lk][ei]){
+        for(const s in state.logs[lk][ei]){
+          const v=parseFloat(state.logs[lk][ei][s].wt);
+          if(!isNaN(v)&&v>best)best=v;
+        }
+      }
+    });
+  }
+  return best>0?best:null;
+}
+
+/* ─── PROGRESS ─────────────────────────────────────────── */
+function renderProgress(){
+  const v=document.getElementById("view-progress");
+  let html=`<div class="section-title">Personal Records</div>`;
+  const lifts=["Barbell Bench Press","Barbell Row (Pendlay)","Overhead Press","Pull-Ups / Lat Pulldown","Leg Press","Romanian Deadlift","Goblet Squat","Incline Dumbbell Press","Cable Row","Overhead Press (DB)","Lat Pulldown","Close-Grip Bench Press"];
+  html+=`<div class="prcard"><h3>Top Lifts (best weight)</h3>`;
+  let any=false;
+  lifts.forEach(l=>{const pr=getPR(l);if(pr){html+=`<div class="prline"><span class="lift">${l}</span><span class="val">${pr} lbs</span></div>`;any=true;}});
+  if(!any)html+=`<div class="hint">No PRs yet. Log weights on the Workout tab.</div>`;
+  html+=`</div>`;
+  const totalSessions=Object.keys(state.completed).length;
+  const totalNotes=Object.values(state.notes).filter(n=>n&&n.trim()).length;
+  let totalSets=0;
+  for(const lk in state.logs)for(const ei in state.logs[lk])for(const s in state.logs[lk][ei]){const sd=state.logs[lk][ei][s];if(sd&&(sd.wt||sd.reps||sd.repsL||sd.repsR))totalSets++;}
+  html+=`<div class="prcard"><h3>Totals</h3>`;
+  html+=`<div class="prline"><span class="lift">Sessions completed</span><span class="val">${totalSessions} / 140</span></div>`;
+  html+=`<div class="prline"><span class="lift">Sets logged</span><span class="val">${totalSets}</span></div>`;
+  html+=`<div class="prline"><span class="lift">Notes written</span><span class="val">${totalNotes}</span></div>`;
+  html+=`</div>`;
+  v.innerHTML=html;
+}
+
+/* ─── DATA ─────────────────────────────────────────────── */
+function renderData(){
+  const v=document.getElementById("view-data");
+  let html=`<div class="section-title">Backup & Restore</div>`;
+  html+=`<div class="hint">Data saves on this device only. Export weekly and keep the text safe (email it to yourself). Import to restore on a new device.</div>`;
+  html+=`<button class="databtn" onclick="exportData()">⬆ Export Data (copy backup)</button>`;
+  html+=`<button class="databtn" onclick="document.getElementById('impbox').style.display='block'">⬇ Import Data (restore)</button>`;
+  html+=`<div id="impbox" style="display:none;margin-top:10px"><textarea class="data" id="imptext" placeholder="Paste backup here…"></textarea><button class="databtn" onclick="importData()" style="margin-top:8px">Restore from text</button></div>`;
+  html+=`<div id="expbox" style="display:none;margin-top:10px"><textarea class="data" id="exptext" readonly></textarea><div class="hint">Copy all text above and save it somewhere safe.</div></div>`;
+  html+=`<div class="section-title">Reset</div>`;
+  html+=`<button class="databtn danger" onclick="resetData()">⚠ Erase all data</button>`;
+  v.innerHTML=html;
+}
+function exportData(){const b=document.getElementById("expbox");const t=document.getElementById("exptext");t.value=JSON.stringify(state);b.style.display="block";t.select();try{document.execCommand("copy");toast("✓ Copied");}catch(e){toast("Select & copy");}}
+function importData(){const t=document.getElementById("imptext").value.trim();if(!t){toast("Paste backup first");return;}try{const d=JSON.parse(t);state=Object.assign({week:1,day:"mon",logs:{},notes:{},completed:{},notesOpen:{}},d);save();toast("✓ Restored");renderLog();}catch(e){toast("⚠ Invalid backup");}}
+function resetData(){if(confirm("Erase ALL data? Export a backup first if unsure.")){state={week:1,day:"mon",logs:{},notes:{},completed:{},notesOpen:{}};save();toast("Erased");renderLog();renderData();}}
+
+/* ─── TABS ─────────────────────────────────────────────── */
+document.querySelectorAll(".tabbar button").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".tabbar button").forEach(b=>b.classList.remove("on"));
+    btn.classList.add("on");
+    const tab=btn.dataset.tab;
+    ["log","progress","data"].forEach(t=>{document.getElementById("view-"+t).style.display=t===tab?"block":"none";});
+    if(tab==="progress")renderProgress();
+    if(tab==="data")renderData();
+  };
+});
+
+/* ─── JUMP TO TODAY ────────────────────────────────────── */
+function todayYMD(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+/* Find the week + day matching today's real date. Returns null if outside the plan. */
+function resolveToday(){
+  const t=todayYMD();
+  for(const w of WEEKS){
+    for(let i=0;i<7;i++){
+      const [y,m,d]=w.start.split("-").map(Number);
+      const dt=new Date(y,m-1,d+i);
+      const ds=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      if(ds===t) return {week:w.wk, day:DAY_ORDER[i]};
+    }
+  }
+  return null;
+}
+/* Set state to today if in range; clamp to plan bounds if outside. */
+function jumpToToday(silent){
+  const hit=resolveToday();
+  if(hit){
+    state.week=hit.week; state.day=hit.day; save();
+    if(!silent) toast("📅 Jumped to today");
+    renderLog(); window.scrollTo(0,0);
+    return true;
+  }
+  if(!silent){
+    const t=todayYMD();
+    const first=WEEKS[0].start;
+    const lastW=WEEKS[WEEKS.length-1];
+    if(t<first){ state.week=1; state.day="mon"; toast("Plan starts Jul 6 — showing Week 1"); }
+    else { state.week=lastW.wk; state.day="sun"; toast("Past plan end — showing Week 28"); }
+    save(); renderLog(); window.scrollTo(0,0);
+  }
+  return false;
+}
+
+load();
+// Auto-open to today's week + day (only on fresh app open, not on every render)
+jumpToToday(true);
+renderLog();
+</script>
+</body>
+</html>
